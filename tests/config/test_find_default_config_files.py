@@ -2,6 +2,10 @@
 # For details: https://github.com/PyCQA/pylint/blob/main/LICENSE
 # Copyright (c) https://github.com/PyCQA/pylint/blob/main/CONTRIBUTORS.txt
 
+# pylint: disable=duplicate-code, useless-suppression
+# (We're going to remove those tests for 3.0 they test deprecated code)
+# The threshold is high for now, but we could lower it later
+
 from __future__ import annotations
 
 import contextlib

@@ -97,7 +97,6 @@ enable=
 
 disable=
     attribute-defined-outside-init,
-    duplicate-code,
     invalid-name,
     missing-docstring,
     protected-access,
@@ -154,7 +153,8 @@ notes=FIXME,XXX,TODO
 [SIMILARITIES]
 
 # Minimum lines number of a similarity.
-min-similarity-lines=4
+# TODO Decrease this eventually
+min-similarity-lines=13
 
 # Ignore comments when computing similarities.
 ignore-comments=yes
@@ -163,10 +163,10 @@ ignore-comments=yes
 ignore-docstrings=yes
 
 # Ignore imports when computing similarities.
-ignore-imports=no
+ignore-imports=yes
 
 # Signatures are removed from the similarity computation
-ignore-signatures=no
+ignore-signatures=yes
 
 
 [VARIABLES]
