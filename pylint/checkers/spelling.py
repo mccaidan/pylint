@@ -266,7 +266,7 @@ class SpellingChecker(BaseTokenChecker):
         ),
     )
 
-    def open(self):
+    def open(self) -> None:
         self.initialized = False
         self.private_dict_file = None
 
@@ -322,11 +322,11 @@ class SpellingChecker(BaseTokenChecker):
         )
         self.initialized = True
 
-    def close(self):
+    def close(self) -> None:
         if self.private_dict_file:
             self.private_dict_file.close()
 
-    def _check_spelling(self, msgid, line, line_num):
+    def _check_spelling(self, msgid: str, line: str, line_num: int) -> None:
         original_line = line
         try:
             initial_space = re.search(r"^[^\S]\s*", line).regs[0][1]
@@ -429,14 +429,21 @@ class SpellingChecker(BaseTokenChecker):
         self._check_docstring(node)
 
     @check_messages("wrong-spelling-in-docstring")
-    def visit_functiondef(self, node: nodes.FunctionDef) -> None:
+    def visit_functiondef(
+        self, node: Union[nodes.FunctionDef, nodes.AsyncFunctionDef]
+    ) -> None:
         if not self.initialized:
             return
         self._check_docstring(node)
 
     visit_asyncfunctiondef = visit_functiondef
 
-    def _check_docstring(self, node):
+    def _check_docstring(
+        self,
+        node: Union[
+            nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef, nodes.Module
+        ],
+    ) -> None:
         """Check the node has any spelling errors."""
         if not node.doc_node:
             return
