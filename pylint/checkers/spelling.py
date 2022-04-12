@@ -261,7 +261,7 @@ class SpellingChecker(BaseTokenChecker):
                 "type": "string",
                 "metavar": "<comma separated words>",
                 "help": "List of comma separated words that should be considered directives if "
-                "they appear and the beginning of a comment and should not be checked.",
+                "they appear at the beginning of a comment and should not be checked.",
             },
         ),
     )
@@ -305,7 +305,7 @@ class SpellingChecker(BaseTokenChecker):
             self.spelling_dict = enchant.Dict(dict_name)
 
         if self.linter.config.spelling_store_unknown_words:
-            self.unknown_words = set()
+            self.unknown_words: set = set()
 
         self.tokenizer = get_tokenizer(
             dict_name,
@@ -328,10 +328,11 @@ class SpellingChecker(BaseTokenChecker):
 
     def _check_spelling(self, msgid: str, line: str, line_num: int) -> None:
         original_line = line
-        try:
-            initial_space = re.search(r"^[^\S]\s*", line).regs[0][1]
-        except (IndexError, AttributeError):
+        result = re.search(r"^[^\S]\s*", line)
+        if result is None:
             initial_space = 0
+        else:
+            initial_space = result.regs[0][1]
         if line.strip().startswith("#") and "docstring" not in msgid:
             line = line.strip()[1:]
             # A ``Filter`` cannot determine if the directive is at the beginning of a line,
@@ -379,7 +380,10 @@ class SpellingChecker(BaseTokenChecker):
 
             # Store word to private dict or raise a message.
             if self.linter.config.spelling_store_unknown_words:
-                if lower_cased_word not in self.unknown_words:
+                if (
+                    self.private_dict_file is not None
+                    and lower_cased_word not in self.unknown_words
+                ):
                     self.private_dict_file.write(f"{lower_cased_word}\n")
                     self.unknown_words.add(lower_cased_word)
             else:
@@ -430,7 +434,7 @@ class SpellingChecker(BaseTokenChecker):
 
     @check_messages("wrong-spelling-in-docstring")
     def visit_functiondef(
-        self, node: Union[nodes.FunctionDef, nodes.AsyncFunctionDef]
+        self, node: nodes.FunctionDef | nodes.AsyncFunctionDef
     ) -> None:
         if not self.initialized:
             return
@@ -440,9 +444,10 @@ class SpellingChecker(BaseTokenChecker):
 
     def _check_docstring(
         self,
-        node: Union[
-            nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef, nodes.Module
-        ],
+        node: nodes.FunctionDef
+        | nodes.AsyncFunctionDef
+        | nodes.ClassDef
+        | nodes.Module,
     ) -> None:
         """Check the node has any spelling errors."""
         if not node.doc_node:
