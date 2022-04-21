@@ -504,19 +504,10 @@ class StdlibChecker(DeprecatedMixin, BaseChecker):
         for inferred in utils.infer_all(node.func):
             if inferred is astroid.Uninferable:
                 continue
-            if inferred.root().name in OPEN_MODULE:
-                if (
-                    isinstance(node.func, nodes.Name)
-                    and node.func.name in OPEN_FILES_MODE
-                ):
-                    self._check_open_mode(node)
-                if (
-                    isinstance(node.func, nodes.Name)
-                    and node.func.name in OPEN_FILES_ENCODING
-                    or isinstance(node.func, nodes.Attribute)
-                    and node.func.attrname in OPEN_FILES_ENCODING
-                ):
-                    self._check_open_encoded(node, inferred.root().name)
+            if inferred.root().name in OPEN_MODULE and isinstance(
+                node.func, nodes.Name
+            ):
+                self._check_open_call(inferred, node)
             elif inferred.root().name == UNITTEST_CASE:
                 self._check_redundant_assert(node, inferred)
             elif isinstance(inferred, nodes.ClassDef):
@@ -535,6 +526,16 @@ class StdlibChecker(DeprecatedMixin, BaseChecker):
                 elif name in DEBUG_BREAKPOINTS:
                     self.add_message("forgotten-debug-statement", node=node)
             self.check_deprecated_method(node, inferred)
+
+    def _check_open_call(self, inferred, node: nodes.Call) -> None:
+        if node.func.name in OPEN_FILES_MODE:
+            self._check_open_mode(node)
+        if (
+            node.func.name in OPEN_FILES_ENCODING
+            or isinstance(node.func, nodes.Attribute)
+            and node.func.attrname in OPEN_FILES_ENCODING
+        ):
+            self._check_open_encoded(node, inferred.root().name)
 
     @utils.check_messages("boolean-datetime")
     def visit_unaryop(self, node: nodes.UnaryOp) -> None:
@@ -621,7 +622,7 @@ class StdlibChecker(DeprecatedMixin, BaseChecker):
         ):
             self.add_message("boolean-datetime", node=node)
 
-    def _check_open_mode(self, node):
+    def _check_open_mode(self, node: nodes.Call):
         """Check that the mode argument of an open or file call is valid."""
         try:
             mode_arg = utils.get_argument_from_call(node, position=1, keyword="mode")
